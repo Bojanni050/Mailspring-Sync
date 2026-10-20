@@ -876,16 +876,12 @@ string exectuablePath = argv[0];
 
     // Note: On Windows, SASL plugin path is configured in libetpan's mailsasl.c
     // It defaults to the executable directory, but can be overridden via SASL_PATH env var.
-
-#ifndef DEBUG
-    // check path to executable in an obtuse way, prevent re-use of
-    // Mailspring-Sync in products / forks not called Mailspring.
-    transform(exectuablePath.begin(), exectuablePath.end(), exectuablePath.begin(), ::tolower);
-    string headerMessageId = string(USAGE_STRING).substr(59, 4) + string(USAGE_IDENTITY).substr(33, 6);
-    if (exectuablePath.find(headerMessageId) == string::npos) {
-        return 2;
-    }
-#endif
+    //
+    // Upstream refuses to run unless "mailspring" appears in argv[0], which it assembles out of
+    // two USAGE_* string offsets to keep it non-obvious. That check makes any renamed build
+    // exit 2 with no JSON on stdout, which the client can only report as "an unknown error has
+    // occurred". Nuntio builds this engine from source under the GPL, so the branding gate is
+    // removed here rather than worked around with a directory named after the original product.
 
     // initialize the stanford exception handler
     exceptions::setProgramNameForStackTrace(exectuablePath.c_str());

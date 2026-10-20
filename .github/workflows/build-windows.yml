@@ -2,9 +2,11 @@ name: Build Windows
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, nuntio-1.26]
   pull_request:
     branches: [main, master]
+  # Manual trigger: useful when re-running a build without a new commit.
+  workflow_dispatch:
 
 env:
   VCPKG_DEFAULT_TRIPLET: x86-windows
@@ -175,19 +177,9 @@ jobs:
           name: win-ia32-mailsync
           path: Windows/mailsync.tar.gz
 
-      - name: Deploy to S3
-        if: github.ref == 'refs/heads/master'
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
-        shell: pwsh
-        run: |
-          # Upload to S3
-          $archivePath = "Windows/mailsync.tar.gz"
-          $s3Key = "mailsync/$env:COMMIT/win-ia32/mailsync.tar.gz"
-
-          aws s3 cp $archivePath s3://mailspring-builds/$s3Key --acl public-read
+      # Upstream deploys the archive to its own S3 bucket here. That step needs AWS credentials
+      # this fork does not have, and Nuntio consumes the workflow artifact (or a GitHub release
+      # built from it) instead, so it is dropped rather than left to fail the job.
 
   # Run install-check in a separate job to verify SSL/TLS connectivity.
   # This validates that curl, OpenSSL, and mailcore2 are all working correctly.
